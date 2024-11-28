@@ -1,6 +1,7 @@
 from torch import nn
 from batch_renormalization import BatchRenormalization2D
 
+
 class ResNetBlock_v2(nn.Module):
 
     def __init__(self, in_channels_block, is_downsampling_block = False):
@@ -79,13 +80,13 @@ class SqueezeAndExcitationBlock(nn.Module):
 
         conv = x
 
-        x = self.avg_pool.forward(x)
+        x = self.avg_pool.forward(x)  # B,C,H,W -> B,C
         x = x.squeeze(dim=3)
         x = x.squeeze(dim=2)
-        x = self.fc1.forward(x)
+        x = self.fc1.forward(x)  # B,C -> B,bottleneck_features
         x = self.relu.forward(x)
-        x = self.fc2.forward(x)
-        x = self.sigmoid.forward(x)
+        x = self.fc2.forward(x)  # B,bottleneck_features -> B,C
+        x = self.sigmoid.forward(x)  # B,C -> B,C,1,1
         x = x.unsqueeze(dim=2)
         x = x.unsqueeze(dim=3)
 
@@ -105,7 +106,6 @@ class SE_ResNetBottleneckBlock(nn.Module):
         self.out_channels_block = self.bottleneck_channels * 4
         self.layer_1_stride = 1
 
-
         if self.is_downsampling_block:
             self.bottleneck_channels *= 2
             self.out_channels_block *= 2
@@ -119,11 +119,10 @@ class SE_ResNetBottleneckBlock(nn.Module):
                 padding = 0
             )
 
-
         self.squeeze_and_excitation = SqueezeAndExcitationBlock(
-                    r = 16,
-                    channels = self.out_channels_block
-            )
+            r = 16,
+            channels = self.out_channels_block
+        )
 
         self.batch_norm_1 = nn.BatchNorm2d(self.in_channels_block)
         self.relu_1 = nn.ReLU()
@@ -156,19 +155,23 @@ class SE_ResNetBottleneckBlock(nn.Module):
 
     def forward(self,x):
 
-        identity = x
+        identity = x  # B,C,H,W
 
         if self.is_downsampling_block:
             identity = self.projection_shortcut.forward(identity)
 
+        # h, w = H//2, W//2 if is_downsampling_block else H, W
+        # B,C,H,W -> B,bottleneck_channels,h,w
         x = self.batch_norm_1.forward(x)
         x = self.relu_1.forward(x)
         x = self.conv_layer_1.forward(x)
 
+        # B,bottleneck_channels,h,w -> B,bottleneck_channels,h,w
         x = self.batch_norm_2.forward(x)
         x = self.relu_2.forward(x)
         x = self.conv_layer_2.forward(x)
 
+        # B,bottleneck_channels,h,w -> B,out_channels_block,h,w
         x = self.batch_norm_3.forward(x)
         x = self.relu_3.forward(x)
         x = self.conv_layer_3.forward(x)
@@ -270,7 +273,7 @@ class SE_ResNetBottleneckBlock_layer_norm(nn.Module):
 
 
 class SE_ResNetBottleneckBlock_renorm(nn.Module):
-
+    # 除了规范化层与SE_ResNetBottlenectBlock不同，其余几乎一致
     def __init__(self, in_channels_block, is_downsampling_block = False):
         super(SE_ResNetBottleneckBlock_renorm, self).__init__()
 
@@ -279,7 +282,6 @@ class SE_ResNetBottleneckBlock_renorm(nn.Module):
         self.bottleneck_channels = in_channels_block // 4
         self.out_channels_block = self.bottleneck_channels * 4
         self.layer_1_stride = 1
-
 
         if self.is_downsampling_block:
             self.bottleneck_channels *= 2
@@ -293,7 +295,6 @@ class SE_ResNetBottleneckBlock_renorm(nn.Module):
                 stride = 2,
                 padding = 0
             )
-
 
         self.squeeze_and_excitation = SqueezeAndExcitationBlock(
             r = 16,

@@ -5,7 +5,8 @@ import numpy as np
 import time
 from PIL import Image
 
-IMG_SIZE = (256,256)
+IMG_SIZE = (256, 256)
+
 
 class ImageNetDataset(Dataset):
     def __init__(self, data_path, is_train, train_split = 0.9, random_seed = 42, target_transform = None, num_classes = None):
@@ -43,15 +44,15 @@ class ImageNetDataset(Dataset):
             for image_name in os.listdir(class_path):
                 image_path = os.path.join(class_path, image_name)
                 self.image_list.append(dict(
-                    cls = cls,
-                    image_path = image_path,
-                    image_name = image_name,
+                    cls=cls,
+                    image_path=image_path,
+                    image_name=image_name,
                 ))
 
-        self.img_idxes = np.arange(0,len(self.image_list))
+        self.img_idxes = np.arange(0, len(self.image_list))
 
         np.random.seed(random_seed)
-        np.random.shuffle(self.img_idxes)
+        np.random.shuffle(self.img_idxes)  # 对图像索引进行扰动，后续取数据时从根据此处的索引取
 
         last_train_sample = int(len(self.img_idxes) * train_split)
         if is_train:
@@ -73,29 +74,25 @@ class ImageNetDataset(Dataset):
             tr = transforms.Grayscale(num_output_channels=3)
             img = tr(img)
 
-        tr = transforms.ToTensor()
-        img1 = tr(img)
-
         width, height = img.size
         if min(width, height)>IMG_SIZE[0] * 1.5:
             tr = transforms.Resize(int(IMG_SIZE[0] * 1.5))
             img = tr(img)
-
-        width, height = img.size
-        if min(width, height)<IMG_SIZE[0]:
+        elif min(width, height) < IMG_SIZE[0]:
             tr = transforms.Resize(IMG_SIZE)
             img = tr(img)
-
+        else:
+            pass
         tr = transforms.RandomCrop(IMG_SIZE)
         img = tr(img)
 
         tr = transforms.ToTensor()
         img = tr(img)
 
-        if (img.shape[0] != 3):
+        if img.shape[0] != 3:
             img = img[0:3]
 
-        return dict(image = img, cls = img_info['cls']['class_idx'], class_name = img_info['cls']['class_name'])
+        return dict(image=img, cls=img_info['cls']['class_idx'], class_name = img_info['cls']['class_name'])
 
     def get_number_of_classes(self):
         return self.num_classes
@@ -111,7 +108,7 @@ class ImageNetDataset(Dataset):
 
 
 def get_imagenet_datasets(data_path, train_split = 0.9, num_classes = None, random_seed = None):
-
+    # 获取训练集和测试集
     if random_seed == None:
         random_seed = int(time.time())
 

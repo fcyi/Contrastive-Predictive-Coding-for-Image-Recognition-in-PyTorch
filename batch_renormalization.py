@@ -1,6 +1,7 @@
 from torch.nn import Module
 import torch
 
+
 class BatchNormalization2D(Module):
 
     def __init__(self, num_features,  eps=1e-05, momentum = 0.1):
@@ -80,13 +81,11 @@ class BatchRenormalization2D(Module):
         self.r_max = self.r_max.to(device)
         self.d_max = self.d_max.to(device)
 
-
         if self.training:
-
             r = torch.clamp(batch_ch_std / self.running_avg_std, 1.0 / self.r_max, self.r_max).to(device).data.to(device)
             d = torch.clamp((batch_ch_mean - self.running_avg_mean) / self.running_avg_std, -self.d_max, self.d_max).to(device).data.to(device)
 
-            x = ((x - batch_ch_mean) * r )/ batch_ch_std + d
+            x = ((x - batch_ch_mean) * r) / batch_ch_std + d
             x = self.gamma * x + self.beta
 
             if self.r_max < self.max_r_max:
