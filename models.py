@@ -211,16 +211,14 @@ class ContextPredictionModel(Module):
 
 class ResClassificatorModel(Module):
 
-    def __init__(self, in_channels, num_classes):
+    def __init__(self, in_channels, num_classes, hiddenChannels_=1024, numResBlocks_=16):
         super(ResClassificatorModel, self).__init__()
-
-        # Input is [Bx1024x7x7] shaped
         # Input is [Bxinput_channelsx7x7] shaped tensor
 
         self.num_classes = num_classes
-        self.num_res_blocks = 16
+        self.num_res_blocks = numResBlocks_
         self.in_channels = in_channels
-        self.channels = 1024
+        self.channels = hiddenChannels_
 
         self.prep = nn.Sequential(
             BatchRenormalization2D(in_channels),
@@ -251,13 +249,17 @@ class ResClassificatorModel(Module):
 
         self.softmax = nn.Softmax(dim=1)
 
-
     def forward(self, x):
+        # B,in_channels,H,W -> B,hiddenChannels_,H,W
         x = self.prep.forward(x)
+        # B,hiddenChannels_,H,W -> B,hiddenChannels_,H,W
         x = self.res_blocks.forward(x)
+        # B,hiddenChannels_,H,W -> B,hiddenChannels_,1,1
         x = self.avg_pool.forward(x)
+        # B,hiddenChannels_,1,1 -> B,hiddenChannels_
         x = x.squeeze(dim=3)
         x = x.squeeze(dim=2)
+        # B,hiddenChannels_ -> B,num_classes
         x = self.linear.forward(x)
         x = self.softmax.forward(x)
 

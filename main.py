@@ -17,11 +17,11 @@ parser = argparse.ArgumentParser(description='Contrastive predictive coding para
 parser.add_argument('-mode', default='train_encoder_context_prediction', type=str)
 parser.add_argument('-image_folder', default='/home/hqd/workspace/intenRecognize/data/tiered_imagenet/train', type=str)
 parser.add_argument('-num_classes', default=10, type=int)
-parser.add_argument('-batch_size', default=64, type=int)
+parser.add_argument('-batch_size', default=16, type=int)
 parser.add_argument('-sub_batch_size', default=2, type=int)
 parser.add_argument('-num_random_patches', default=15, type=int)
 parser.add_argument('-start_channels', default=64, type=int)
-parser.add_argument('-Z_DIMENSIONS', default=256, type=int)
+parser.add_argument('-Z_DIMENSIONS', default=256, type=int)  # Z_DIMENSIONS == start_channels * 4
 # cpu or cuda
 parser.add_argument('-device', default='cuda', type=str)
 
@@ -68,10 +68,10 @@ if args.mode == 'train_classificator':
 
     res_encoder_weights_path = None
     res_classificator_weights_path = None
-
+    
     res_encoder_model = ResEncoderModel(start_channels=args.start_channels).to(args.device)
-    res_classificator_model = ResClassificatorModel(in_channels=args.Z_DIMENSIONS, num_classes=args.num_classes).to(args.device)
-
+    res_classificator_model = ResClassificatorModel(in_channels=args.Z_DIMENSIONS, num_classes=args.num_classes,
+                                                    hiddenChannels_=args.Z_DIMENSIONS, numResBlocks_=16).to(args.device)
     inspect_model(res_encoder_model)
     inspect_model(res_classificator_model)
 

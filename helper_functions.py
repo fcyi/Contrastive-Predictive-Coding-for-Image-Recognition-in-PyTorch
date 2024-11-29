@@ -93,7 +93,7 @@ def get_patch_tensor_from_image_batch(img_batch):
     patch_batch = None
     all_patches_list = []
 
-    # 带重复地截取64*64的图像块，相邻图像块之间的重复占比为50%
+    # 带重复地截取64*64的图像块，同一行或同一列上相邻图像块之间的重复占比为50%
     for y_patch in range(7):
         for x_patch in range(7):
 
@@ -108,7 +108,7 @@ def get_patch_tensor_from_image_batch(img_batch):
             all_patches_list.append(img_patches)
 
             # print(patch_batch.shape)
-    # 49,B,C,64,64 -> 49*B,C,64,64
+    # B,49,C,64,64 -> 49*B,C,64,64
     all_patches_tensor = torch.cat(all_patches_list, dim=1)  # 将图像块沿着新增加出来的维度方向进行拼接
 
     # 将每个图像的图像块放在一起，以方便后续的拼接能保证属于相同的图像块在一起
