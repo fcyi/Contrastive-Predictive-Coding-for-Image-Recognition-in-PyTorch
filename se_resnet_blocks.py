@@ -194,7 +194,7 @@ class SE_ResNetBottleneckBlock_layer_norm(nn.Module):
         self.out_channels_block = self.bottleneck_channels * 4
         self.layer_1_stride = 1
 
-
+        actMapResolutionHalf_ = act_map_resolution
         if self.is_downsampling_block:
             self.bottleneck_channels *= 2
             self.out_channels_block *= 2
@@ -208,12 +208,14 @@ class SE_ResNetBottleneckBlock_layer_norm(nn.Module):
                 padding = 0
             )
 
+            actMapResolutionHalf_ = [amr_//2 for amr_ in actMapResolutionHalf_]
 
         self.squeeze_and_excitation = SqueezeAndExcitationBlock(
             r = 16,
             channels = self.out_channels_block
         )
 
+        # ln是层归一化，其形状参数必须和被处理的特征图的维度（即通道数、宽度和高度）相同
         layer_norm_shape = [self.in_channels_block] + act_map_resolution
         self.layer_norm_1 = nn.LayerNorm(layer_norm_shape)
         self.relu_1 = nn.ReLU()
@@ -224,7 +226,7 @@ class SE_ResNetBottleneckBlock_layer_norm(nn.Module):
             stride=self.layer_1_stride,
             padding=0)
 
-        layer_norm_shape = [self.bottleneck_channels] + act_map_resolution
+        layer_norm_shape = [self.bottleneck_channels] + actMapResolutionHalf_
         self.layer_norm_2 = nn.LayerNorm(layer_norm_shape)
         self.relu_2 = nn.ReLU()
         self.conv_layer_2 = nn.Conv2d(
@@ -235,7 +237,7 @@ class SE_ResNetBottleneckBlock_layer_norm(nn.Module):
             padding = 1
         )
 
-        layer_norm_shape = [self.bottleneck_channels] + act_map_resolution
+        layer_norm_shape = [self.bottleneck_channels] + actMapResolutionHalf_
         self.layer_norm_3 = nn.LayerNorm(layer_norm_shape)
         self.relu_3 = nn.ReLU()
         self.conv_layer_3 = nn.Conv2d(

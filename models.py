@@ -1,5 +1,6 @@
 # from resnet_blocks import ResNetBottleneckBlock
 from se_resnet_blocks import SE_ResNetBottleneckBlock as ResNetBottleneckBlock
+from se_resnet_blocks import SE_ResNetBottleneckBlock_layer_norm
 from se_resnet_blocks import SE_ResNetBottleneckBlock_renorm
 from batch_renormalization import BatchRenormalization2D
 
@@ -36,6 +37,7 @@ class ResEncoderModel(Module):
         )
         # Output 256x 32 x 32
         current_channels = self.start_channels
+        currentResolution_ = 32
 
         self.resnet_blocks = nn.ModuleList()
 
@@ -51,14 +53,20 @@ class ResEncoderModel(Module):
 
                 resnet_block.add_module(
                     f'conv_{conv_block_idx}',
-                    ResNetBottleneckBlock(
-                        in_channels_block = current_channels,
-                        is_downsampling_block = is_downsampling_block
+                    # ResNetBottleneckBlock(
+                    #     in_channels_block = current_channels,
+                    #     is_downsampling_block = is_downsampling_block
+                    # )
+                    SE_ResNetBottleneckBlock_layer_norm(
+                        in_channels_block=current_channels,
+                        act_map_resolution=[currentResolution_, currentResolution_],
+                        is_downsampling_block=is_downsampling_block
                     )
                 )
 
                 if is_downsampling_block:
                     current_channels *= 2
+                    currentResolution_ = currentResolution_ // 2
 
             self.resnet_blocks.append(resnet_block)
 

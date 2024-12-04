@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(description='Contrastive predictive coding para
 parser.add_argument('-mode', default='train_encoder_context_prediction', type=str)
 parser.add_argument('-image_folder', default='/home/hqd/workspace/intenRecognize/data/tiered_imagenet/train', type=str)
 parser.add_argument('-num_classes', default=10, type=int)
-parser.add_argument('-batch_size', default=16, type=int)
+parser.add_argument('-batch_size', default=64, type=int)
 parser.add_argument('-sub_batch_size', default=2, type=int)
 parser.add_argument('-num_random_patches', default=15, type=int)
 parser.add_argument('-start_channels', default=64, type=int)
